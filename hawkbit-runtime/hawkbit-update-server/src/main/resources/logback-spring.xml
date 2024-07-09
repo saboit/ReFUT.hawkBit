@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2015 Bosch Software Innovations GmbH and others.
+
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+-->
+<configuration>
+   <include resource="org/springframework/boot/logging/logback/base.xml" />
+
+   <logger name="org.eclipse.hawkbit.eventbus.DeadEventListener" level="WARN" />
+   <Logger name="org.springframework.boot.actuate.audit.listener.AuditListener" level="WARN" />
+
+   <Logger name="org.hibernate.validator.internal.util.Version" level="WARN" />
+
+   <!-- Security Log with hints on potential attacks -->
+   <logger name="server-security" level="INFO" />
+
+   <!-- Suppressing "More than one Servlet Mapping defined. WebSocket may not work"
+   error due to the way VaadinServletConfiguration configures the endpoints mapping ("/UI" and "/UI/*").
+   At the end only the first "/UI" is taken for websocket communication.  -->
+   <logger name="org.atmosphere.util.IOUtils" level="OFF" />
+
+   <variable name="LOGS_DIR" value="${LOGS_DIR:-data/log}" />
+   <variable name="HTTP_FILE" value="${LOGS_DIR}/requests.log" />
+   <variable name="SQL_FILE" value="${LOGS_DIR}/sql.log" />
+   <variable name="APP_FILE" value="${LOGS_DIR}/app.log" />
+
+   <!-- HTTP Requests audit trail -->
+   <appender name="HTTPFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${HTTP_FILE}</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>${HTTP_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+         <maxHistory>${LOGBACK_ROLLINGPOLICY_MAX_HISTORY:-30}</maxHistory>
+         <totalSizeCap>${LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP:-3GB}</totalSizeCap>
+      </rollingPolicy>
+      <append>true</append>
+      <immediateFlush>true</immediateFlush>
+      <encoder>
+         <pattern>%date{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %msg%n</pattern>
+      </encoder>
+   </appender>
+   <logger name="org.zalando.logbook" additivity="false">
+      <level value="TRACE" />
+      <appender-ref ref="HTTPFILE" />
+   </logger>
+
+   <!-- Modification SQL Audit trail -->
+   <conversionRule conversionWord="msql" converterClass="org.eclipse.hawkbit.repository.jpa.model.helper.TenantAwareMessageConverter" />
+   <appender name="SQLFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${SQL_FILE}</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>${SQL_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+         <maxHistory>${LOGBACK_ROLLINGPOLICY_MAX_HISTORY:-30}</maxHistory>
+         <totalSizeCap>${LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP:-3GB}</totalSizeCap>
+      </rollingPolicy>
+      <append>true</append>
+      <immediateFlush>true</immediateFlush>
+      <filter class="org.eclipse.hawkbit.repository.jpa.model.helper.ModifySqlLogFilter" />
+      <encoder>
+         <pattern>%date{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %level %msql%n</pattern>
+      </encoder>
+   </appender>
+   <logger name="org.eclipse.persistence" additivity="false">
+      <level value="DEBUG" />
+      <appender-ref ref="SQLFILE" />
+   </logger>
+
+   <!-- Spring log -->
+   <appender name="APPFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${APP_FILE}</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>${APP_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+         <maxHistory>${LOGBACK_ROLLINGPOLICY_MAX_HISTORY:-30}</maxHistory>
+         <totalSizeCap>${LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP:-3GB}</totalSizeCap>
+      </rollingPolicy>
+      <append>true</append>
+      <immediateFlush>true</immediateFlush>
+      <encoder>
+         <pattern>${FILE_LOG_PATTERN}</pattern>
+      </encoder>
+   </appender>
+
+   <Root level="INFO">
+      <appender-ref ref="${SPRING_LOG:-CONSOLE}" />
+   </Root>
+
+</configuration>

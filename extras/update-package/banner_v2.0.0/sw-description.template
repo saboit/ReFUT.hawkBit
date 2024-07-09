@@ -1,0 +1,24 @@
+software =
+{
+        version = "2.0.0";
+        description = "Banner update";
+        bootloader_transaction_marker = false;
+        hardware-compatibility: ["1.1"];
+
+        files: (
+                {
+                        filename = "banner";
+                        path = "/my/banner";
+                        sha256 = "{banner-sha256}";
+                        properties = {create-destination = "true";}
+                }
+        );
+
+        scripts: (
+                {
+                        filename = "post-install";
+                        type = "postinstall";
+                        sha256 = "{post-install-sha256}";
+                }
+        );
+}

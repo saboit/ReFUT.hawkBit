@@ -1,0 +1,30 @@
+services:
+
+  mysql:
+    container_name: refut-db
+    hostname: refutdb
+    image: "mysql:5.7"
+    environment:
+      MYSQL_DATABASE: "hawkbit"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "true"
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+
+  hawkbit:
+    container_name: refut-be
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mysql
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://refutdb:3306/hawkbit
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_SECURITY_USER_PASSWORD={noop}Nejdriv4Kafe
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/data:/hawkbit/data
+      - ./data/artifactrepo:/hawkbit/artifactrepo

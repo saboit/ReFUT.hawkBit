@@ -1,0 +1,100 @@
+---
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://gateway:3100/loki/api/v1/push
+    tenant_id: tenant1
+
+scrape_configs:
+  - job_name: refut 
+    pipeline_stages:
+      - regex:
+          expression: "^(?P<time>\\S+?)\\s+(?P<content>.*)$"
+      - labels:
+          time:
+          content:
+      - timestamp:
+          source: time
+          format: RFC3339
+      - json:
+          expressions:
+            origin: origin
+            type: type
+            correlation: correlation
+            protocol: protocol
+            remote: remote
+            method: method
+            uri: uri
+            host: host
+            path: path
+            scheme: scheme
+            port: port
+            tenant: tenant
+            user: user
+            headers: headers
+            body: body
+            duration: duration
+            status: status
+          source: content
+      - labels:
+          origin:
+          type:
+          headers:
+          correlation:
+          protocol:
+          remote:
+          method:
+          uri:
+          host:
+          path:
+          scheme:
+          port:
+          tenant:
+          user:
+          body:
+          duration:
+          status:
+      - json:
+          expressions:
+            accept: Accept
+            headers_host: Host
+            user_agent: '"User-Agent"'
+            content_type: '"Content-Type"'
+            headers_date: Date
+          source: headers
+      - labels:
+          accept:
+          headers_host:
+          user_agent:
+          content_type:
+          headers_date:
+    static_configs:
+      - targets:
+        - localhost
+        labels:
+          job: refut
+          __path__: /app/log/requests.log
+  - job_name: refut_sql
+    pipeline_stages:
+      - regex:
+          expression: "^(?P<time>\\S+?)\\s+(?P<level>\\S+)\\s+(?P<tenant>\\S+)\\s+(?P<user>\\S+)\\s+(?P<sql>.*)$"
+      - labels:
+          time:
+          level:
+          tenant:
+          user:
+          sql:
+      - timestamp:
+          source: time
+          format: RFC3339
+    static_configs:
+      - targets:
+        - localhost
+        labels:
+          job: refut_sql
+          __path__: /app/log/sql.log
